@@ -1,45 +1,49 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import ContactListScreen from './src/screens/ContactListScreen';
+import ContactFormScreen from './src/screens/ContactFormScreen';
+import ContactViewScreen from './src/screens/ContactViewScreen';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { ContactsProvider } from './src/context/ContactsContext';
+import { useNetInfo } from "@react-native-community/netinfo";
+import { useEffect } from "react";
+import { triggerSync } from './src/sync/syncService';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const Stack = createStackNavigator();
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+export default function App() {
+  const netInfo = useNetInfo();
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+  useEffect(() => {
+  if (netInfo.isConnected) {
+  console.log("Back online - trigger sync");
+  triggerSync();
+  }
+  }, [netInfo.isConnected]);
 
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
+    <PaperProvider>
+      <ContactsProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="ContactList">
+            <Stack.Screen
+              name="ContactList"
+              component={ContactListScreen}
+              options={{ title: 'Contacts' }}
+            />
+            <Stack.Screen
+              name="ContactView"
+              component={ContactViewScreen}
+              options={{ title: 'View Contact' }}
+            />
+            <Stack.Screen
+              name="ContactForm"
+              component={ContactFormScreen}
+              options={{ title: 'Edit Contact' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ContactsProvider>
+    </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
